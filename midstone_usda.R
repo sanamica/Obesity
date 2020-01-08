@@ -38,19 +38,31 @@ socioeco <- socioeco %>%
 usda <- list(usda_access,usda_grocery,usda_restaurant,usda_health,socioeco) %>% 
   reduce(inner_join,by = c( "State", "County", "FIPS"))
 usda <- usda %>% 
-  rename("PACCESS" = `PCT_LACCESS_POP15`,"PACCESS_I" = `PCT_LACCESS_LOWI15`,"PLACCESS_HHNV" = `PCT_LACCESS_HHNV15`,
+  rename("GEOID"=FIPS,"PACCESS" = `PCT_LACCESS_POP15`,"PACCESS_I" = `PCT_LACCESS_LOWI15`,"PLACCESS_HHNV" = `PCT_LACCESS_HHNV15`,
          "PLACCESS_SNAP" = `PCT_LACCESS_SNAP15`, "LACCESS_C"=`LACCESS_CHILD15`, "LACCESS_S"=`LACCESS_SENIORS15`, 
-         "PDIABETES" = `PCT_DIABETES_ADULTS13`, "POBESE" = "PCT_OBESE_ADULTS13")
+         "PDIABETES" = `PCT_DIABETES_ADULTS13`, "POBESE" = "PCT_OBESE_ADULTS13","PWHITE" =`PCT_NHWHITE10`,
+         "PBLACK"=`PCT_NHBLACK10`,"PHISP"=`PCT_HISP10`,"PNHASIAN"=`PCT_NHASIAN10`, "PNHA"= `PCT_NHNA10`,"PNHPI" = `PCT_NHPI10`)
+#Creating other column for race
+usda <- mutate(usda,
+       OTHER=100-(PWHITE + PBLACK + PHISP + PNHASIAN + PNHA + PNHPI ))
+#Changing column order moved OTHER
+
+usda <- subset(usda,select = c(GEOID:PNHA,OTHER, MEDHHINC15:POVRATE15))
+
 usda <- usda %>% 
-   filter(State != "DC")
+   filter(State != "DC") %>% 
+  filter(!is.na(POBESE))
+  # write.csv(file = 'data/usda_final.csv')
+saveRDS(usda,file = "data/usda_clean.rds")
+FFR <- readRDS(file = './data/FFR.RDS')
 
 #EXPLORATION
+usda <- readRDS("data/usda_clean.rds")
 
-usda %>% select(PCT_OBESE_ADULTS13) %>% 
-  summary()
+# usda %>% select(POBSE) %>% 
+#   summary()
 # one missing obesity at Bedford, VA, dropped it. Thing to remember while merging with mapping dataframe)
-usda %>% filter(is.na(PBESE))
-usda <- usda %>% filter(!is.na(POBESE)) 
+ 
 #missing values 
 usda %>% summarise_all(funs(sum(is.na(.)))) %>% 
   view()
@@ -59,12 +71,16 @@ usda %>% filter(is.na(PACCESS_I)) %>%
 usda <- usda %>% filter(!is.na(POBESE)) 
 
 #Corelation
-corrs <- usda %>% select(-c("FIPS", "State", "County")) %>% 
+corrs <- usda %>% select(-c("GEOID", "State", "County")) %>% 
   drop_na() %>% 
   cor()
 
 library(corrplot)
-corrplot(corrs,type = "upper",order = "hclust",tl.col = "black")
+corrplot(corrs,type = "upper",order = "hclust",tl.col = "black", )#ini ranges from 0 (complete equality) to 1 (complete inequality).`) 
+  
+mapping_gini <-  na.omit(mapping_gini) #
+
+#grouping by state
 
 
 
@@ -77,8 +93,7 @@ mapping_gini<- read_csv("data/MappingAmerica_Work-Wealth-Poverty.csv",skip = 15)
 mapping_gini<- mapping_gini %>%
   select(1,4)
 mapping_gini <-  mapping_gini %>%
-  rename("County"=X1, "Gini_Cofficient"=`Gini ranges from 0 (complete equality) to 1 (complete inequality).`) 
-  mapping_gini <-  na.omit(mapping_gini) #removing empty row  
+  rename("County"=X1, "Gini_Cofficient"=`Gremoving empty row`)  
   
 
 mapping_health <-  mapping_health %>%
