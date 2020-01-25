@@ -10,8 +10,7 @@ shinyUI(
   dashboardPage(
     dashboardHeader(title = 'Obesity and Food Enviroment', titleWidth = 300),
     dashboardSidebar(
-      # selectInput("State", label = "State:", choices = State,
-      #             selected = "AL"),
+      
       "Data Source:" ,
       div(a(href = "https://www.ers.usda.gov/data-products/food-access-research-atlas/", img(src="usda.png", width = 110),
             target = "_blank")),
@@ -45,7 +44,7 @@ shinyUI(
 
     
     dashboardBody(
-      #tags$style(type = "text/css", "#map {height: calc(100vh - 80px) !important;}")
+      
       tabItems(
         tabItem(tabName = "map",
                 box(width ="100%", height ="1000px",title ="Obesity Map For U.S.A",
@@ -69,7 +68,7 @@ shinyUI(
         ) , #tabItem
         tabItem(tabName = "connection",
                 fluidRow(
-                # box(selectInput("State", label = "State:", choices = usda$State,
+                 # box(selectInput("State", label = "State:", choices = usda$State,
                 #                 selected = "TN")),
                 
                 box(width = 8,
@@ -77,6 +76,7 @@ shinyUI(
                     
                   plotlyOutput("coorelation_plot")
                     )
+                 # valueBoxOutput("cor_value",width=3)
                 ))
         
         

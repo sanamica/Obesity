@@ -257,6 +257,7 @@ mapping <- mapping_gini %>%
 mapping_anti <- mapping_gini %>% 
   anti_join(mapping_health, by = c("County"))
 
+##Using Regex to clean 
 mapping_health <- mapping_health%>%
   # mutate(State=unlist(lapply(strsplit(County,", "),function(x) x[2])),
   #        County=gsub(",.*","",County))

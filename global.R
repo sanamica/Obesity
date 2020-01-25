@@ -54,15 +54,18 @@ choices = c("Low access to grocery store %" = "PACCESS" ,
             "Fast-food restaurants/1,000 pop" = "FFRPTH14",
             "Full-service restaurants/1,000 pop" = "FSRPTH14",
             "Adult diabetes rate" = "PDIABETES",
-            "Recreation & fitness facilities" = "RECFACPTH14", 
+            "Recreation & fitness facilities/ 1,000" = "RECFACPTH14", 
             "Median household income" = "MEDHHINC15",
-            "Poverty rate" ="POVRATE15"
+            "Poverty rate" ="POVRATE15",
+            "White %" = "PWHITE","Black %" = "PBLACK", "Hispanic %" = "PHISP"
 )
 
 labels <- names(choices)
 names(labels) <- choices
 
-
+cor_val <- corrs <- usda %>% select(c("POBESE","PACCESS","PACCESS_I","PLACCESS_HHNV","PLACCESS_SNAP","PLACCESSWHITE", "PLACCESSBLACK", "PLACCESSHISP",
+                                      "PLACCESSNHAASIAN", "PLACESSNHA", "PACCESSPNHI", "GROC14","SUPERC14", "CONVS14","FFRPTH14","FSRPTH14", "PDIABETES", 
+                                      "RECFACPTH14",  "MEDHHINC15","POVRATE15"))
 
 # 
 # fluidRow(

@@ -21,9 +21,11 @@ shinyServer(function(input, output) {
                       "FFRPTH14" = "Fast-food restaurants/1,000 pop",
                       "FSRPTH14" = "Full-service restaurants/1,000 pop",
                       "PDIABETES" = "Adult diabetes rate" ,
-                      "RECFACPTH14" = "Recreation & fitness facilities", 
+                      "RECFACPTH14" = "Recreation & fitness facilities/1,000 pop", 
                       "MEDHHINC15" = "Median household income" ,
-                      "POVRATE15" = "Poverty rate" 
+                      "POVRATE15" = "Poverty rate",
+          "PWHITE" = "White %"  ,"PBLACK" ="Black %", "PHISP"= "Hispanic %" 
+          
           )
    
    output$obesity_map<- renderLeaflet({
@@ -42,6 +44,7 @@ shinyServer(function(input, output) {
                colorNA = "grey",
                alpha= 1,
                popup.vars = c(
+                 "Obesity Rate" = "POBESE",
                  "Low access to grocery store & lowincome %" = "PACCESS_I",
                  "SNAP households, low access to grocery store %" = "PLACCESS_SNAP",
                  "White, low access to grocery store %" = "PLACCESSWHITE",
@@ -50,10 +53,11 @@ shinyServer(function(input, output) {
                  "Asian, low access to grocery store %" = "PLACCESSNHAASIAN",
                  "Number of Grocery stores/1,000 pop" = "GROC14",
                  "Fast-food restaurants/1,000 pop" = "FFRPTH14",
-                 "Adult diabetes rate" = "PDIABETES",
-                 "Recreation & fitness facilities" = "RECFACPTH14",
+                 "Recreation & fitness facilities/1,000 pop" = "RECFACPTH14",
                  "Median household income" = "MEDHHINC15",
-                 "Poverty rate" ="POVRATE15"
+                 "Poverty rate" ="POVRATE15",
+                 "White %" = "PWHITE","Black %" = "PBLACK", "Hispanic %" = "PHISP"
+
                ))+
 
        tm_polygons(col = var,
@@ -84,7 +88,8 @@ shinyServer(function(input, output) {
             filter(State==input$State) %>%
             ggplot(aes(x=fct_reorder(County,POBESE, .desc = FALSE), y=POBESE, fill =obesity_rate))+
           geom_bar(stat = "identity") +
-          coord_flip()+ aes(text = paste("County:", County, "Obesity%:", POBESE) )+
+          coord_flip()+ aes(text = paste("County:", County, "Obesity%:", POBESE, "Income:", MEDHHINC15,
+                                         "Fast-food restaurants:", FFRPTH14))+
             labs(x= "", y = "Obesity Rate", fill = "Obesity Rate") +
           #geom_hline(aes(yintercept = mean(POBESE))) (need to get median line)
           scale_y_continuous(limits = c(0,50), expand = c(0, 0)) +
@@ -99,7 +104,8 @@ shinyServer(function(input, output) {
     output$obesity_state <- renderPlotly({
       p <- ggplot(usda_state_w,aes(x=fct_reorder(State, w_POBESE,.desc = FALSE), y=w_POBESE, fill = region)) +
         geom_bar(stat = "identity") + 
-         coord_flip()+
+         coord_flip()+ aes(text = paste("State:", State, "Obesity%:", POBESE, "Income:", MEDHHINC15,
+                                        "Fast-food restaurants:", FFRPTH14))+
         labs(x= "", y = "Obesity Rate", colors = "Obesity Rate")  +
          
         scale_y_continuous(limits = c(0,40), expand = c(0, 0)) +
@@ -108,43 +114,20 @@ shinyServer(function(input, output) {
               plot.title = element_text(size = 16), 
               axis.title = element_text(size = 14),
               axis.text = element_text(size = 14),
+              
               legend.text = element_text(size = 14),
               legend.key.size = unit(1.5,"line"))
        
           
-      ggplotly(p)
+      ggplotly(p, tooltip = "text") %>%
+        config(displayModeBar = F)
     })  #obesity_state
+    
+    ##Corelation
     
     output$coorelation_plot <- renderPlotly({
       
-      # p_cor <- usda %>%
-      #   filter(State== input$State_2) %>%
-      #   ggscatter(x=input$Select, y = "POBESE",
-      #             add = "reg.line", conf.int = TRUE, color="obesity_rate", pallette = "jco") +
-      #   stat_cor(aes(color = obesity_rate), label.x = 3) +
-      #   geom_point(alpha=.40)
-      # 
-      # ggplotly(p_cor)
-      # 
-      # p_obesity <- usda %>%
-      #   filter(State==input$State_2) %>%
-      # 
-      # ggplot(aes(x=input$Select, y=POBESE, color = obesity_rate))+
-      #     labs(x=  input$State, y = "Obesity Rate") +
-      #     stat_smooth(method = "lm",
-      #                 color = "red",
-      #                 se = FALSE,
-      #                 size = 1) +
-      #     geom_point(alpha =0.8, position = "jitter") +
-      #     theme(text = element_text(size = 14),
-      #           rect = element_blank(),
-      #           panel.grid =element_blank(),
-      #           title = element_text (color = "#8b0000" ),
-      #          )
-
-       # ggplotly(p_obesity)
-       
-       p_obesity <- usda %>% 
+         p_obesity <- usda %>% 
       filter(State==input$State_2) %>% 
        
        ggplot(aes(x=get(input$Select), y=POBESE, color = obesity_rate ))+
@@ -161,6 +144,17 @@ shinyServer(function(input, output) {
        ggplotly(p_obesity)
     })
     
+    output$cor_value <- renderValueBox({
+      corel <- usda %>%
+        filter(State==input$State_2) %>%
+        select("POBESE",get(input$Select)) %>% 
+        drop_na() %>% 
+        cor()
+      
+        valueBox(round(corel,3),
+        color="blue")
+      
+      })
 
     
     # axis.line = element_line(color = "grey"
