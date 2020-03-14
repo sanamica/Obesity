@@ -1,4 +1,3 @@
-setwd("/Users/anami/nss_data_science/Obesity_food_enviroment/")
 options(scipen = 999)
 
 library(shinydashboard)
@@ -17,6 +16,7 @@ library(leaflet)
 library(tmap)
 library(tmaptools)
 library(rmapshaper)
+library(rsconnect)
 
 usda <- readRDS("data/usda_clean.rds")
 usda_state_w <- readRDS("data/usda_state.rds")
@@ -67,10 +67,3 @@ cor_val <- corrs <- usda %>% select(c("POBESE","PACCESS","PACCESS_I","PLACCESS_H
                                       "PLACCESSNHAASIAN", "PLACESSNHA", "PACCESSPNHI", "GROC14","SUPERC14", "CONVS14","FFRPTH14","FSRPTH14", "PDIABETES", 
                                       "RECFACPTH14",  "MEDHHINC15","POVRATE15"))
 
-# 
-# fluidRow(
-#   
-#   box(title = "Obesity Rate per State",plotlyOutput("obesity_state")),
-#   box(selectInput("region", label = "Region:", choices = usda_state_w$region
-#   ))
-# ),

@@ -4,46 +4,17 @@ options(scipen = 999)
 library(tidyverse)
 library(plotly)
 library(dplyr)
-#library(tm) (used to delete word in column)
 library(caret)
 library(glmnet)
 library(coefplot)
 library(ggpubr)
-# library(waffle)
-# library(ggwaffle)
 library(ggplot2)
 library(hrbrthemes)
 library(corrplot)
-library(wesanderson)
-
-
 
 #EXPLORATION
 usda <- readRDS("data/usda_clean.rds")
 usda_state_w <- readRDS("data/usda_state.rds")
-
-
-# one missing obesity at Bedford, VA, dropped it. Thing to remember while merging with mapping dataframe)
-
-#missing values 
-# usda %>% summarise_all(funs(sum(is.na(.)))) %>% 
-#   view()
-# usda %>% filter(is.na(PACCESS_I)) %>% 
-#   view()
-
-
-## Exploring Obesity
-
-
-#Distribution of Obesity seems to be normally distributed
-# usda %>% 
-#   ggplot(aes(x=POBESE)) + geom_histogram(bin = 50)
-
-# Obesity ranges from 11.80% to 47.60 county lavel, Median 31.20, Mean = 31.02
-# usda %>% select(POBESE) %>% 
-#   summary()
-
-
 
 #PLOTS THEME
 
@@ -73,13 +44,36 @@ ggplotly(o_c)
 
 #Corelation
 corrs <- usda %>%select(-c("GEOID", "State", "County", "obesity_rate","region","POPE15", "PWHITE", "PBLACK", "PHISP", "PNHASIAN" ,
-                           "PNHA", "OTHER", "GROC14" )) %>%
+                           "PNHA", "OTHER", "GROC14", "hover" )) %>%
+  # filter(State=="TX") %>%
   drop_na() %>%
   cor()
 
+corrs <- usda %>% select(c("POBESE","PACCESS","PACCESS_I","PLACCESS_HHNV","PLACCESS_SNAP","PLACCESSWHITE", "PLACCESSBLACK", "PLACCESSHISP",
+ "PLACCESSNHAASIAN", "GROC14","SUPERC14", "CONVS14","FFRPTH14", "PDIABETES", "PWHITE", "PBLACK", "PHISP",
+ "RECFACPTH14",  "MEDHHINC15","POVRATE15")) %>% 
+   drop_na() %>%
+   cor()
 
-corrplot(corrs,type = "upper",order = "hclust",tl.col = "black",
-       )
+corel <- usda %>%
+  filter(State=="TX") %>%
+  select(c("POBESE","PACCESS","PACCESS_I","PLACCESS_HHNV","PLACCESS_SNAP","PLACCESSWHITE", "PLACCESSBLACK", "PLACCESSHISP",
+           "PLACCESSNHAASIAN", "PLACESSNHA", "PACCESSPNHI", "GROC14","SUPERC14", "CONVS14","FFRPTH14","FSRPTH14", "PDIABETES", 
+           "RECFACPTH14",  "MEDHHINC15","POVRATE15")) %>%   drop_na() %>%
+  cor()
+
+
+  correl <- usda %>%
+    filter(State=="TX") %>%
+    select("POBESE",PACCESS) %>% 
+    drop_na() %>% 
+    cor()
+
+corrplot(corrs, type = "upper", order = "hclust", 
+         tl.col = "black", tl.srt = 45)
+
+corrplot(corrs,type = "upper",tl.col = "black")
+       
 dev.copy(png,"corplot_matrix")
 dev.off()
 # ggsave('plots/Cor_matris.png', width = 12, height = 10)
@@ -90,21 +84,9 @@ p_cor <- usda %>%
   ggscatter(x="PACCESS", y = "POBESE",
             add = "reg.line", conf.int = TRUE, color="obesity_rate", pallette = "jco") +
   stat_cor(aes(color = obesity_rate), label.x = 3) +
-  geom_point(alpha=.40)
+  geom_point(alpha=.40) +legend.position='bottom'
 
 ggplotly(p_cor)
-
-# label.x =  3
-
-
-# p_cor <- usda %>%
-#   filter(State=="AL") %>%
-#   ggscatter(x="PACCESS", y = "POBESE",
-#             add = "reg.line", conf.int = TRUE, color="obesity_rate", pallette = "jco") +
-#   stat_cor(aes(label = "County")) +
-#   geom_point(alpha=.40)
-# 
-# ggplotly(p_cor)
 
 
 # ggplotly Corelation
@@ -139,14 +121,34 @@ P_O <- ggplot(p_obesity,aes(x=PACCESS, y=POBESE, color = obesity_rate ))+
         axis.line = element_line(color = "grey"))
 
 ggplotly(P_O,tooltip = "text") 
-# %>% config(displayModeBar = F)
+library("ggpmisc")
 
+P_O <- ggplot(p_obesity,aes(x=PACCESS, y=POBESE, color = obesity_rate ))+
+  labs(x= "Access", y = "Obesity Rate") +
+  geom_smooth(method = "lm",
+              color = "red",
+              se = FALSE,
+              size = 1,
+              formula = y~x)+geom_point()
+  
+  geom_point(alpha =0.7, size = 3, position = "jitter",aes(text = paste("County:",County,"Obesity%:",POBESE))) +
+  theme(text = element_text(family = "sherif",size = 14),
+        rect = element_blank(),
+        panel.grid =element_blank(),
+        title = element_text (color = "#8b0000" ),
+        axis.line = element_line(color = "grey"))
+  P_O
+  
+  
+  function(usda){
+    m <- lm(y ~ x, usda);
+    eq <- substitute(italic(y) == a + b %.% italic(x)*","~~italic(r)^2~"="~r2, 
+                     list(a = format(unname(coef(m)[1]), digits = 2),
+                          b = format(unname(coef(m)[2]), digits = 2),
+                          r2 = format(summary(m)$r.squared, digits = 3)))
+    as.character(as.expression(eq));
+  }
 
-  # geom_vline(intercept =global_mean, color ="grey40",linetype =3)
-#  text = paste("County:",County)
-
-
- 
 p_obesity%>% plot_ly(x = ~PACCESS) %>% 
   add_markers(y = ~POBESE) %>% 
   add_lines(x= ~PACCESS, y = fitted(fit)) %>% 
@@ -163,28 +165,9 @@ p_obesity %>%
   add_trace(x= ~PACCESS, y= fv, mode = "lines") %>% 
   layout(showlegend = F)
 
-  
-
+ 
 paccess <- plot_ly(p_obesity+geom_point(alpha=.40)+stat_cor(aes(color=obesity_rate)))
 
-# ggsave('plots/recorrelation.png')
-p <- gg
-
-
-
-
-# usda %>%
-#   group_by(State) %>%
-#   mutate(POBESE_mean= mean(POBESE, na.rm = TRUE)) %>% 
-#   ggplot(aes(x=fct_reorder(State, POBESE,.desc = TRUE), y="POBESE", fill = obesity_rate)) + 
-#   geom_bar(stat = "identity")
-
-  # ungroup() %>%
-  # filter(POBESE > POBESE_mean) %>%
-  # select(State, POBESE, POBESE_mean)
-
-## PLOT Themes
-#COUNTY Level
 
 o_c <- usda %>%
   filter(State=="AL") %>%
@@ -212,17 +195,7 @@ p <- ggplot(usda_state,aes(x=fct_reorder(State, Average_Obesity,.desc = TRUE), y
   usda_theme1
 ggplotly(p)
 
-##trying to change order in Plotly
-xform <- list(categoryorder = "array",
-              categoryarray = usda_state$State)
-data <- usda_state (State, Average_Obesity, stringsAsFactors= TRUE)
-usda_state$State <- factor(data$State, levels = unique(data$State)[order(data$Average_Obesity, decreasing = TRUE)])
 
-p1 <- plot_ly(usda_state, x = ~State, y = ~Average_Obesity,type = 'bar') %>% 
-  layout(title = "Obesity in Different States", 
-         xaxis = list(title="",categoryorder = "array", categoryarray = ~State),
-         yaxis = list(title = "Obesity Percent"))
-p1
 
 ##weighted state
 usda_state_w <- usda %>%
@@ -289,90 +262,12 @@ summary(usda_region)
 ggplot(usda_region,aes(x=fct_reorder(region, w_POBESE,.desc = TRUE), y= w_POBESE)) + 
   geom_bar(stat = "identity")
 
+##Boxplot
+
 ggplot(usda,aes(x=region, y=POBESE, fill=region)) + labs(x ="", y="Obesity Rate", 
                        title= "Distribution Of Obesity Across Regions") +
   geom_boxplot() + usda_theme1 +theme(rect = element_blank())
 
 ggsave('plots/region_boxn.png', width = 9, height = 7)
 
-# usda_region <- usda %>% 
-#   group_by(region) %>% 
-#   #mutate('Average_Obesity' = mean(POBESE))
-#   summarise('Average_Obesity'= mean(POBESE))
-# 
-# p <- ggplot(usda_region,aes(x=fct_reorder(region, Average_Obesity,.desc = TRUE), y=Average_Obesity)) + 
-#   geom_bar(stat = "identity")
-# 
-# ggplotly(p)
-
-# ggsave('plots/unweightedpobese_A.S.png')
-
-
-
-
-
-
-  # geom_vline(xintercept = 91.95,color="blue")
-  # view()
-  # ungroup() %>%
-  # filter(POBESE > POBESE_mean) %>%
-  # select(State, POBESE, POBESE_mean)
-
-
-#grouping by state
-usda%>% 
-  group_by(State) %>% 
-  # summarise("Median Income"=median(MEDHHINC15, na.rm = TRUE)) %>%
-  ggplot(aes(x=State, y="MEDHHINC15")) +geom_col() + geom_vline(xintercept = 91.95,color="blue")
-
-# usda_race<- usda %>%
-#   group_by(State) %>% 
-#   filter(State == "AL") %>% 
-#   pivot_longer(PWHITE:OTHER, names_to = RACE)
-
-
-usda_long <- pivot_longer(usda, PWHITE:OTHER, names_to = "RACE", values_to = "PCT") 
-# %>%  filter(State == "AL")
-
-usda_long %>% filter (State=="AL") %>% 
-  barplot(xlab = "RACE", col="PCT")
-  
-
-usda_race <- usda_long %>% 
-  group_by(State) %>% 
-  #mutate('Average_Obesity' = mean(POBESE))
-  summarise('Percentage'= mean(PCT))
-
-ggplot(usda_race,aes(x=fct_reorder(State, Percentage,.desc = TRUE), y=RACE), fill = RACE) + 
-  geom_bar(stat = "identity")
-
-
-# 
-# ggplot(usda_race, aes(fill = RACE, values = vallue))+
-#   geom_waffle(n_rows = 10, size= 0.5, flip= TRUE)
-  # scale_fill_manual(values = c("#f59cbf","#00daff")) +
-  # coord_equal() +
-  # theme_minimal() +
-  # theme_enhance_waffle() +
-  # labs(title = "Proprtion of Race/ Ethnicity ",
-  #      subtitle = "Alabama",
-  #      caption = "Plot made using `waffle` - R package")
-  
-# 
-# usda %>% distinct() %>% 
-#   count(State) %>% 
-#   view()
-usda_race %>% 
-  ggplot(aes(fill=RACE, values = value)) +
-  geom_waffle()
-
-usda_race %>% 
-  ggplot(aes(x=fct_reorder(RACE,value,.desc= TRUE), y=value, fill = RACE)) +
-  geom_col()
-
-  plot <- table(usda_race$value)
-  waffle(plot)
-  
-  ##Regresion
-  
-  
+#

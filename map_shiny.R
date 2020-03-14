@@ -24,7 +24,7 @@ library(rmapshaper)
 # 
 # saveRDS(county_shape, file = "data/county_shape.RDS")
 
-county_shape <- readRDS("data/county_shape.RDS")
+county_shape <- readRDS("data/county_shape.rds")
 
 
 

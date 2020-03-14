@@ -1,4 +1,4 @@
-setwd("/Users/anami/nss_data_science/Obesity_food_enviroment/")
+
 library(shiny)
 library("shinydashboard")
 sidebar <- dashboardSidebar(selectinputId ="name",
@@ -20,16 +20,14 @@ shinyUI(
                    menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
                    id="tabs",
                    menuItem("Connections", tabName = "connection", icon = icon("th"))
-                   # menuItem("Map", tabName = "map", icon=icon("globe"))
+                   
                 
                   
                   
 
 
       ),
-      # conditionalPanel(condition ="input.tabs== 'map'",
-      #                selectInput(State_1, label = "State:", choices = usda$State %>% unique(),
-      #                                        selected = "TN")),
+      
       
       conditionalPanel(condition ="input.tabs== 'dashboard'",
                        selectInput("State", label = "State:", choices = usda$State %>% unique(),
@@ -58,8 +56,7 @@ shinyUI(
                         height = "260px",
                         
                     tabPanel(title = "Obesity Rate per County",plotlyOutput("obesity_county")),
-                    # box(selectInput("State", label = "State:", choices = usda$State,
-                    #              selected = "TN")),
+                   
                     tabPanel(title = "Obesity Rate per State",plotlyOutput("obesity_state"))
                    
                     
@@ -68,8 +65,7 @@ shinyUI(
         ) , #tabItem
         tabItem(tabName = "connection",
                 fluidRow(
-                 # box(selectInput("State", label = "State:", choices = usda$State,
-                #                 selected = "TN")),
+              
                 
                 box(width = 8,
                     title = "Relation Between Obesity and Food Enviroment",
@@ -77,7 +73,8 @@ shinyUI(
                   plotlyOutput("coorelation_plot")
                     )
                  # valueBoxOutput("cor_value",width=3)
-                ))
+                ),
+                fluidRow(infoBoxOutput(width=3,"cor_value")))
         
         
       )    #dbtabitems

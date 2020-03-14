@@ -1,5 +1,3 @@
-
-
 library(shiny)
 library()
 
@@ -144,20 +142,23 @@ shinyServer(function(input, output) {
        ggplotly(p_obesity)
     })
     
-    output$cor_value <- renderValueBox({
+    output$cor_value <- renderInfoBox({
       corel <- usda %>%
         filter(State==input$State_2) %>%
-        select("POBESE",get(input$Select)) %>% 
+        select("POBESE",input$Select) %>% 
         drop_na() %>% 
         cor()
-      
-        valueBox(round(corel,3),
-        color="blue")
+      print(corel[1,2])
+    
+    
+        valueBox(round(corel[1,2],3),
+                 subtitle = "Correlation",
+                 color="blue" )
       
       })
 
     
-    # axis.line = element_line(color = "grey"
+
         
         
   
