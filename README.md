@@ -6,7 +6,7 @@ The question that started this project is: How does proximity and access to groc
 To answer this question R Shiny app was developed which maps county level obesity trends in U.S.A along with socioeconomic and health indicators information. It also shows relationship between different environmental factors and obesity across different states.
 
 # Link to R Shiny App
-anamika.shinyapps.io/Obesity_food_enviroment/
+https://anamika.shinyapps.io/Obesity_food_enviroment/
 
 # Data Sources:
 •	United States Department of Agriculture (USDA): Food Access Research Atlas 
